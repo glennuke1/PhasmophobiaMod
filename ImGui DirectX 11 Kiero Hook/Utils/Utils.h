@@ -11,10 +11,8 @@
 #include <Libraries/Dumper.hpp>
 #include <Core/Variables.h>
 #include <Utils/SDK.h>
-#include <Libraries/luaaa.hpp>
 
 using namespace Variables;
-using namespace luaaa;
 
 namespace Utils
 {
@@ -263,48 +261,6 @@ namespace Utils
 		vList->AddRectFilled(ImVec2(x0, y0), ImVec2(x1, y1), color, rounding, rounding_corners_flags);
 	}
 
-	void HealthBar(float x, float y, float w, float h, int phealth, ImColor col)
-	{
-		auto vList = ImGui::GetBackgroundDrawList();
-
-		int healthValue = max(0, min(phealth, 100));
-
-		int barColor = ImColor(min(510 * (100 - healthValue) / 100, 255), min(510 * healthValue / 100, 255), 25, 255);
-		vList->AddRect(ImVec2(x - 1, y - 1), ImVec2(x + w + 1, y + h + 1), col);
-		RectFilled(x, y, x + w, y + (((float)h / 100.0f) * (float)phealth), barColor, 0.0f, 0);
-	}
-
-	void DrawLuaEditor() {
-		ImGui::SetNextWindowSize(ImVec2(700.000f, 400.000f), ImGuiCond_Once);
-		if (!ImGui::Begin("Lua Editor by Kio", nullptr)) {
-			ImGui::End();
-			return;
-		}
-
-		ImGui::InputTextMultiline("##lua", Lua::LuaScript, sizeof(Lua::LuaScript), ImVec2(700, 300));
-
-		if(ImGui::Button("Execute##lua")) {
-			try {
-				int err = luaL_loadstring(Lua::LuaState, Lua::LuaScript);
-				if (err == 0)
-				{
-					err = lua_pcall(Lua::LuaState, 0, 0, 0);
-				}
-
-				if (err)
-				{
-					std::cout << "\nlua err: " << lua_tostring(Lua::LuaState, -1) << std::endl;
-					lua_pop(Lua::LuaState, 1);
-				}
-			}
-			catch (const std::exception& e) {
-				std::cout << "lua err: " << e.what() << std::endl;
-			}
-		}
-
-		ImGui::End();
-	}
-
 	void DrawInspector() {
 		ImGui::SetNextWindowSize(ImVec2(600.000f, 1000.000f), ImGuiCond_Once);
 		if (!ImGui::Begin("Inspector", nullptr, 2)) {
@@ -313,11 +269,7 @@ namespace Utils
 		}
 
 		static std::vector<std::string> components;
-		static std::vector<std::string> classes;
-		static std::vector<std::string> methods;
-		static std::string current_comp = "";
 
-		ImGui::Text("Components");
 		if (ImGui::Button("Update##comp")) {
 			components = Dumper::DumpComponentsString();
 		}
@@ -325,7 +277,7 @@ namespace Utils
 		static int component_current_idx = 0; // Here we store our selection data as an index.
 		static ImGuiTextFilter c_filter;
 		c_filter.Draw("Search##compfilter");
-		if (ImGui::BeginListBox("##Components", ImVec2(-FLT_MIN, 200)))
+		if (ImGui::BeginListBox("##Components", ImVec2(-FLT_MIN, 800)))
 		{
 			for (size_t n = 0; n < components.size(); n++)
 			{
@@ -343,64 +295,39 @@ namespace Utils
 			ImGui::EndListBox();
 		}
 		ImGui::Spacing();
-		ImGui::Text("Classes");
-		if (ImGui::Button("Update##class")) {
-			classes = Dumper::DumpClassesString(components[component_current_idx]);
-			current_comp = components[component_current_idx];
+		if (ImGui::Button("Show##Properties")) {
+			
+			CheatMenuVariables::InspectorCurrentComponent = components[component_current_idx];
+			CheatMenuVariables::ShowProperties = true;
+		}
+		ImGui::End();
+
+		if (CheatMenuVariables::ShowProperties) {
+			DrawProperties();
+		}
+	}
+
+	void DrawProperties() {
+		ImGui::SetNextWindowSize(ImVec2(600.000f, 1000.000f), ImGuiCond_Once);
+		if (!ImGui::Begin("Properties", nullptr, 2)) {
+			ImGui::End();
+			return;
 		}
 
-		ImGui::SetNextItemWidth(150.000f);
-		static int class_current_idx = 0; // Here we store our selection data as an index.
-		static ImGuiTextFilter cl_filter;
-		cl_filter.Draw("Search##classfilter");
-		if (ImGui::BeginListBox("##Class", ImVec2(-FLT_MIN, 200)))
+		static std::vector<Unity::CComponent*> classes;
+
+		if (ImGui::Button("Update##classes")) {
+			classes = Dumper::DumpClasses(CheatMenuVariables::InspectorCurrentComponent);
+		}
+
+		if (ImGui::BeginListBox("##Classes", ImVec2(-FLT_MIN, 800)))
 		{
 			for (size_t n = 0; n < classes.size(); n++)
 			{
-				if (!cl_filter.PassFilter(classes[n].c_str())) {
-					continue;
-				}
-				const bool class_is_selected = (class_current_idx == (int)n);
-				if (ImGui::Selectable(classes[n].c_str(), class_is_selected)) {
-					class_current_idx = (int)n;
-				}
-
-				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-				if (class_is_selected)
-					ImGui::SetItemDefaultFocus();
+				
 			}
 			ImGui::EndListBox();
 		}
-
-		ImGui::Spacing();
-		ImGui::Text("Methods");
-		if (ImGui::Button("Update##Methods")) {
-			methods = Dumper::DumpMethodsString(current_comp, classes[class_current_idx]);
-		}
-
-		ImGui::SetNextItemWidth(150.000f);
-		static int method_current_idx = 0; // Here we store our selection data as an index.
-		static ImGuiTextFilter me_filter;
-		me_filter.Draw("Search##methodfilter");
-		if (ImGui::BeginListBox("##Methods", ImVec2(-FLT_MIN, 200)))
-		{
-			for (size_t n = 0; n < methods.size(); n++)
-			{
-				if (!me_filter.PassFilter(methods[n].c_str())) {
-					continue;
-				}
-				const bool meth_is_selected = (method_current_idx == (int)n);
-				if (ImGui::Selectable(methods[n].c_str(), meth_is_selected))
-					method_current_idx = (int)n;
-
-				// Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-				if (meth_is_selected)
-					ImGui::SetItemDefaultFocus();
-			}
-			ImGui::EndListBox();
-		}
-
-		ImGui::End();
 	}
 
 	uintptr_t SearchSignatureByClassAndFunctionName(const char* className, const char* functionName) {
@@ -419,20 +346,7 @@ namespace Utils
 		return methodPtr;
 	}
 
-	bool GetHead(Unity::CGameObject* obj) { // thats a test
-		auto Animators = obj->CallMethodSafe<Unity::il2cppArray<Unity::CComponent*>*>("GetComponentsInChildren", IL2CPP::Class::GetSystemType(IL2CPP::Class::Find("UnityEngine.Animator")));
-
-		if (!Animators)
-			return false;
-
-		auto Animator = Animators->operator[](0);
-
-		Unity::CTransform* headTransform = Animator->CallMethodSafe<Unity::CTransform*>("GetBoneTransform", 10);
-
-		ImGui::GetForegroundDrawList()->AddCircleFilled(ImVec2(headTransform->GetPosition().x, headTransform->GetPosition().y), 4, ImColor(255, 0, 0, 255));
-
-		return true;
-	}
+	//obj->CallMethodSafe<Unity::il2cppArray<Unity::CComponent*>*>("GetComponentsInChildren", IL2CPP::Class::GetSystemType(IL2CPP::Class::Find("UnityEngine.Animator")));
 
 	bool Contains(Unity::il2cppArray<Unity::CComponent*>* list, Unity::CComponent* c) {
 		for (int i = 0; i < list->m_uMaxLength; i++) {

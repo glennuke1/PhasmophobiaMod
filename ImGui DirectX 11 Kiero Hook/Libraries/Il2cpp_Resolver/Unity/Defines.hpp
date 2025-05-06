@@ -52,6 +52,11 @@
 #define UNITY_RIGIDBODY_SETDETECTCOLLISIONS                         UNITY_RIGIDBODY_CLASS"::set_detectCollisions"
 #define UNITY_RIGIDBODY_SETVELOCITY                                 UNITY_RIGIDBODY_CLASS"::set_velocity_Injected"
 
+// Light
+#define UNITY_LIGHT_CLASS										    "UnityEngine.Light"
+#define UNITY_LIGHT_GETINTENSITY                                    UNITY_LIGHT_CLASS"::get_intensity"
+#define UNITY_LIGHT_SETINTENSITY                                    UNITY_LIGHT_CLASS"::set_intensity"
+
 // Transform
 #define UNITY_TRANSFORM_CLASS										"UnityEngine.Transform"
 #define UNITY_TRANSFORM_GETPARENT                                   UNITY_TRANSFORM_CLASS"::GetParent"

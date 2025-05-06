@@ -114,7 +114,6 @@
     <ClInclude Include="Libraries\kiero\minhook\src\hde\table32.h" />
     <ClInclude Include="Libraries\kiero\minhook\src\hde\table64.h" />
     <ClInclude Include="Libraries\kiero\minhook\src\trampoline.h" />
-    <ClInclude Include="Libraries\luaaa.hpp" />
     <ClInclude Include="Libraries\PaternScan.hpp" />
     <ClInclude Include="Libraries\Vectors\vec.h" />
     <ClInclude Include="Libraries\Vectors\vec2.h" />
@@ -152,9 +151,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
+    <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>

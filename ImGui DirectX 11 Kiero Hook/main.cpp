@@ -14,10 +14,8 @@
 #include <Libraries/PaternScan.hpp>
 #include <Core/HooksFunctions.h>
 #include <Core/Cheats.h>
-#include <Libraries/luaaa.hpp>
 
 using namespace Variables;
-using namespace luaaa;
 
 #pragma region ImGui
 	extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -72,14 +70,6 @@ static void InitImGui()
 static void InitVars() {
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x03);
 	std::cout << "\n*******************************************************************************" << std::endl;
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), FOREGROUND_GREEN);
-	std::cout << R"(  
-     __  __     __     ______     ______     ______     _____     ______	
-    /\ \/ /    /\ \   /\  __ \   /\  ___\   /\  __ \   /\  __-.  /\  ___\	
-    \ \  _'-.  \ \ \  \ \ \/\ \  \ \ \____  \ \ \/\ \  \ \ \/\ \ \ \  __\   
-     \ \_\ \_\  \ \_\  \ \_____\  \ \_____\  \ \_____\  \ \____-  \ \_____\	
-      \/_/\/_/   \/_/   \/_____/   \/_____/   \/_____/   \/____/   \/_____/
-	)" << std::endl;
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x03);
 	std::cout << "\n*******************************************************************************\n" << std::endl;
 	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 0x0F);
@@ -113,11 +103,6 @@ static void HandleInputs() {
 		MH_DisableHook(MH_ALL_HOOKS);
 		MH_Uninitialize();
 		CheatMenuVariables::ShowMenu = false;
-
-		if (Lua::LuaState != NULL)
-		{
-			lua_close(Lua::LuaState);
-		}
 	}
 }
 
@@ -180,7 +165,7 @@ static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval
 	#pragma endregion
 
 	#pragma region Watermark
-		if (CheatMenuVariables::Watermark)
+		if (CheatMenuVariables::ShowFps)
 		{
 			Utils::DrawOutlinedText(gameFont, ImVec2(System::ScreenCenter.x, System::ScreenSize.y - 20), 13.0f, CheatVariables::RainbowColor, true, Prefix.c_str());
 			Utils::DrawOutlinedText(gameFont, ImVec2(System::ScreenCenter.x, 5), 13.0f, CheatVariables::RainbowColor, true, "[ %.1f FPS ]", ImGui::GetIO().Framerate);
@@ -207,10 +192,6 @@ static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval
 
 		DrawCrosshair();
 
-		if (CheatMenuVariables::AimbotFOVCheck) {
-			ImGui::GetForegroundDrawList()->AddCircle(ImVec2(System::ScreenCenter.x, System::ScreenCenter.y), CheatMenuVariables::AimbotFOV, ImColor(255, 255, 255), 360);
-		}
-
 	#pragma endregion
 
 	#pragma region EndScene
@@ -227,18 +208,6 @@ static HRESULT __stdcall hkPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval
 	#pragma endregion	
 	 
 	return oPresent(pSwapChain, SyncInterval, Flags);
-}
-
-void bindToLUA(lua_State* L)
-{
-	LuaModule(L)
-		.def("pi", 3.1415926535897932)
-		.fun("testFn", []() {
-			std::cout << "Yoo bro\n" << std::endl;
-		})
-		.fun("test", []() {
-			ImGui::GetBackgroundDrawList()->AddCircle(ImVec2(System::ScreenCenter.x, System::ScreenCenter.y), 50, ImColor(255, 255, 255), 360);
-		});
 }
 
 static void Rainbow() {
@@ -277,10 +246,6 @@ static void Setup()
 
 	FindSigs();
 	EnableHooks();
-
-	Lua::LuaState = luaL_newstate();
-	luaL_openlibs(Lua::LuaState);
-	bindToLUA(Lua::LuaState);
 
 	kiero::bind(8, (void**)&oPresent, hkPresent);
 
